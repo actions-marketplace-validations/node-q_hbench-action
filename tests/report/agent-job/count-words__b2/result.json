@@ -1,0 +1,30 @@
+{
+  "trial_name": "count-words__b2",
+  "task_name": "example/count-words",
+  "source": "example",
+  "agent_info": {
+    "name": "claude-code",
+    "version": "2.1.0",
+    "model_info": {
+      "name": "claude-opus-5-5",
+      "provider": "anthropic"
+    }
+  },
+  "agent_result": {
+    "n_input_tokens": 80000,
+    "n_cache_tokens": 0,
+    "n_output_tokens": 2000,
+    "cost_usd": 0.0434
+  },
+  "verifier_result": {
+    "rewards": {
+      "reward": 0.0,
+      "field_score": 0.5
+    }
+  },
+  "exception_info": null,
+  "agent_execution": {
+    "started_at": "2026-10-22T05:22:00.123456789Z",
+    "finished_at": "2026-10-22T05:22:45.123456789Z"
+  }
+}

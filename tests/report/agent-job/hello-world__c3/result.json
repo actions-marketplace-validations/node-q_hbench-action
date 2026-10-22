@@ -1,0 +1,30 @@
+{
+  "trial_name": "hello-world__c3",
+  "task_name": "example/hello-world",
+  "source": "example",
+  "agent_info": {
+    "name": "claude-code",
+    "version": "2.1.0",
+    "model_info": {
+      "name": "claude-opus-5-5",
+      "provider": "anthropic"
+    }
+  },
+  "agent_result": {
+    "n_input_tokens": 200000,
+    "n_cache_tokens": 150000,
+    "n_output_tokens": 9000,
+    "cost_usd": 0.02
+  },
+  "verifier_result": null,
+  "exception_info": {
+    "exception_type": "AgentTimeoutError",
+    "exception_message": "agent timed out",
+    "exception_traceback": "",
+    "occurred_at": "2026-10-22T05:32:00Z"
+  },
+  "agent_execution": {
+    "started_at": "2026-10-22T05:22:00.123456789Z",
+    "finished_at": "2026-10-22T05:32:00.123456789Z"
+  }
+}

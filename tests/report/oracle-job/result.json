@@ -1,0 +1,27 @@
+{
+  "started_at": "2026-10-22T06:00:00Z",
+  "finished_at": "2026-10-22T06:00:12Z",
+  "n_total_trials": 1,
+  "stats": {
+    "evals": {
+      "oracle__tasks": {
+        "n_trials": 1,
+        "n_errors": 0,
+        "metrics": [
+          {
+            "mean": 1.0
+          }
+        ],
+        "pass_at_k": {},
+        "reward_stats": {
+          "reward": {
+            "1.0": [
+              "hello-world__d4"
+            ]
+          }
+        },
+        "exception_stats": {}
+      }
+    }
+  }
+}

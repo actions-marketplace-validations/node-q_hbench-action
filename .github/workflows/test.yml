@@ -19,7 +19,7 @@ defaults:
 
 jobs:
   lint:
-    name: actionlint, shellcheck and the report's syntax
+    name: actionlint, shellcheck and the report's tests
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     env:
@@ -41,8 +41,8 @@ jobs:
         run: '"$RUNNER_TEMP/actionlint" -color'
       - name: Lint the scripts
         run: shellcheck scripts/*.sh
-      - name: Compile the report
-        run: python3 -m py_compile scripts/report.py
+      - name: Test the report
+        run: python3 -m unittest discover --start-directory tests --pattern 'test_*.py' --verbose
 
   install:
     name: Install ${{ matrix.version }} on ${{ matrix.os }}
@@ -99,10 +99,13 @@ jobs:
           MEAN_REWARD: ${{ steps.hbench.outputs.mean-reward }}
           N_TRIALS: ${{ steps.hbench.outputs.n-trials }}
           N_ERRORS: ${{ steps.hbench.outputs.n-errors }}
+          N_SOLVED: ${{ steps.hbench.outputs.n-solved }}
+          PASS_RATE: ${{ steps.hbench.outputs.pass-rate }}
           RESULT_PATH: ${{ steps.hbench.outputs.result-path }}
           ARTIFACT_ID: ${{ steps.hbench.outputs.artifact-id }}
         run: |
           [[ "$MEAN_REWARD" == 1.0 && "$N_TRIALS" == 1 && "$N_ERRORS" == 0 ]]
+          [[ "$N_SOLVED" == 1 && "$PASS_RATE" == 1.0 ]]
           [[ -f "$RESULT_PATH" && -n "$ARTIFACT_ID" ]]
 
   run-below-threshold:
@@ -128,8 +131,9 @@ jobs:
           OUTCOME: ${{ steps.hbench.outcome }}
           MEAN_REWARD: ${{ steps.hbench.outputs.mean-reward }}
           N_ERRORS: ${{ steps.hbench.outputs.n-errors }}
+          N_SOLVED: ${{ steps.hbench.outputs.n-solved }}
         run: |
-          [[ "$OUTCOME" == failure && "$MEAN_REWARD" == 0.0 && "$N_ERRORS" == 0 ]]
+          [[ "$OUTCOME" == failure && "$MEAN_REWARD" == 0.0 && "$N_ERRORS" == 0 && "$N_SOLVED" == 0 ]]
 
   run-oci-dataset:
     name: Run the oracle on an OCI dataset, locked by digest

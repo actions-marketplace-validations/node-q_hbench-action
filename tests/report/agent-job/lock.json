@@ -1,0 +1,8 @@
+{
+  "schema_version": 3,
+  "hbench": {
+    "version": "0.3.0",
+    "results_epoch": "0.2"
+  },
+  "n_concurrent_trials": 3
+}

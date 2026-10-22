@@ -47,10 +47,26 @@ The [README](../README.md) has the short version.
 | `mean-reward` | Mean reward over every trial of every eval. |
 | `n-trials` | Trials run. |
 | `n-errors` | Trials that ended in an error. |
+| `n-solved` | Trials solved, with a reward of 1. |
+| `pass-rate` | Solved trials over all trials, from 0 to 1. |
+| `cost-usd` | The agents' cost in US dollars, where hbench knows it. Empty for agents that report none, such as the oracle. |
 | `artifact-id` | ID of the uploaded artifact. |
 
-`mean-reward` weighs each eval's mean reward by its trials. The job summary has a row per eval and lists the
-trials below a reward of 1.
+A trial is solved when its reward is 1, so `pass-rate` is the share of trials that got full marks.
+`mean-reward` weighs each eval's mean reward by its trials; it differs from `pass-rate` when tasks give
+partial rewards.
+
+The job summary has:
+
+- a row per eval (agent, model and tasks): solved trials and the pass rate, mean reward, pass@k, errors,
+  the agent's time in total and per trial (median), tokens in and out, and the cost in total and per
+  solved trial;
+- whether the mean reward reached `min-mean-reward`;
+- what ran: the hbench release and results epoch, the agent and model, the tasks with their registry and
+  manifest digest, attempts and concurrency, and when the job ran;
+- the tasks' own metrics, the other keys of their `reward.json`, as means;
+- the errors by type, with the trials they hit;
+- a row per trial, errors and failures first: result, reward, agent time, tokens and cost.
 
 ## More examples
 
@@ -162,15 +178,16 @@ Pass any other `hbench run` flag through `args`, one argument per line:
 action.yml          the inputs, outputs and three steps: install, run, upload
 scripts/install.sh  download, checksum, provenance, tool cache
 scripts/run.sh      build the hbench run command line, run it, report
-scripts/report.py   result.json to outputs, job summary and the threshold
+scripts/report.py   the job's results to outputs, job summary and the threshold
+tests/test_report.py  the report, on the two job directories in tests/report/
 tests/tasks/        a one-task folder the tests run
 ```
 
-`.github/workflows/test.yml` runs on GitHub-hosted runners only: actionlint and shellcheck; installing
-`latest` and a pinned release on Linux x86_64 and arm64 and macOS arm64 and x86_64, with provenance checked;
-the oracle on the local task with `min-mean-reward: '1'`; the `nop` agent, which must fail the step on its
-score; two tasks of an OCI dataset with `--lock-write`; and a dataset listed in a `registry.json`, by path and
-by URL.
+`.github/workflows/test.yml` runs on GitHub-hosted runners only: actionlint, shellcheck and the report's unit
+tests; installing `latest` and a pinned release on Linux x86_64 and arm64 and macOS arm64 and x86_64, with
+provenance checked; the oracle on the local task with `min-mean-reward: '1'`; the `nop` agent, which must fail
+the step on its score; two tasks of an OCI dataset with `--lock-write`; and a dataset listed in a
+`registry.json`, by path and by URL.
 
 To try the scripts outside GitHub, set the variables the runner sets (`RUNNER_TEMP`, `GITHUB_ACTION_PATH`,
 `GITHUB_OUTPUT`, `GITHUB_PATH`, `GITHUB_STEP_SUMMARY`) and the `INPUT_*` ones `action.yml` passes, then run

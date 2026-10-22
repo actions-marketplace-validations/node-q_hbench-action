@@ -1,0 +1,30 @@
+{
+  "trial_name": "fix-median__a1",
+  "task_name": "example/fix-median",
+  "source": "example",
+  "agent_info": {
+    "name": "claude-code",
+    "version": "2.1.0",
+    "model_info": {
+      "name": "claude-opus-5-5",
+      "provider": "anthropic"
+    }
+  },
+  "agent_result": {
+    "n_input_tokens": 120000,
+    "n_cache_tokens": 100000,
+    "n_output_tokens": 3500,
+    "cost_usd": 0.06
+  },
+  "verifier_result": {
+    "rewards": {
+      "reward": 1.0,
+      "field_score": 1.0
+    }
+  },
+  "exception_info": null,
+  "agent_execution": {
+    "started_at": "2026-10-22T05:22:00.123456789Z",
+    "finished_at": "2026-10-22T05:23:30.123456789Z"
+  }
+}

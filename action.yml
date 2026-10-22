@@ -96,6 +96,15 @@ outputs:
   n-errors:
     description: Trials that ended in an error.
     value: ${{ steps.run.outputs.n-errors }}
+  n-solved:
+    description: Trials solved, with a reward of 1.
+    value: ${{ steps.run.outputs.n-solved }}
+  pass-rate:
+    description: Solved trials over all trials, from 0 to 1.
+    value: ${{ steps.run.outputs.pass-rate }}
+  cost-usd:
+    description: The agents' cost in US dollars, where hbench knows it. Empty for agents that report none, such as the oracle.
+    value: ${{ steps.run.outputs.cost-usd }}
   artifact-id:
     description: ID of the uploaded artifact.
     value: ${{ steps.upload.outputs.artifact-id }}
