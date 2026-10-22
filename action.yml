@@ -1,9 +1,9 @@
-name: Run hbench
+name: Harness Benchmark
 description: Install hbench, run AI agents on benchmark tasks in Docker, and report their scores in the job summary.
 author: node-q
 
 branding:
-  icon: activity
+  icon: bar-chart-2
   color: blue
 
 inputs:
