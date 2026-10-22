@@ -1,0 +1,17 @@
+{
+  "job_name": "agent-job",
+  "n_attempts": null,
+  "agents": [
+    {
+      "name": "claude-code",
+      "model_name": "anthropic/claude-opus-5-5"
+    }
+  ],
+  "datasets": [
+    {
+      "name": "example",
+      "version": "1.0",
+      "registry_path": "registry.json"
+    }
+  ]
+}

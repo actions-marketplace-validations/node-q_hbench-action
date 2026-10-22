@@ -1,0 +1,13 @@
+{
+  "agents": [
+    {
+      "name": "oracle",
+      "model_name": null
+    }
+  ],
+  "datasets": [
+    {
+      "path": "tasks"
+    }
+  ]
+}

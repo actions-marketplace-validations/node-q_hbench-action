@@ -96,6 +96,15 @@ outputs:
   n-errors:
     description: Trials that ended in an error.
     value: ${{ steps.run.outputs.n-errors }}
+  n-solved:
+    description: Trials solved, with a reward of 1.
+    value: ${{ steps.run.outputs.n-solved }}
+  pass-rate:
+    description: Solved trials over all trials, from 0 to 1.
+    value: ${{ steps.run.outputs.pass-rate }}
+  cost-usd:
+    description: The agents' cost in US dollars, where hbench knows it. Empty for agents that report none, such as the oracle.
+    value: ${{ steps.run.outputs.cost-usd }}
   artifact-id:
     description: ID of the uploaded artifact.
     value: ${{ steps.upload.outputs.artifact-id }}
@@ -134,6 +143,7 @@ runs:
         INPUT_JOBS_DIR: ${{ inputs.jobs-dir }}
         INPUT_MIN_MEAN_REWARD: ${{ inputs.min-mean-reward }}
         INPUT_ARTIFACT_NAME: ${{ inputs.artifact-name }}
+        INPUT_UPLOAD_ARTIFACT: ${{ inputs.upload-artifact }}
       run: '"$GITHUB_ACTION_PATH/scripts/run.sh"'
 
     - name: Upload the job directory

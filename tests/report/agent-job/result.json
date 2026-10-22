@@ -1,0 +1,38 @@
+{
+  "started_at": "2026-10-22T05:21:31.249358767Z",
+  "finished_at": "2026-10-22T05:33:01.100000000Z",
+  "n_total_trials": 3,
+  "stats": {
+    "n_completed_trials": 3,
+    "n_errored_trials": 1,
+    "cost_usd": 0.1234,
+    "evals": {
+      "claude-code__claude-opus-5-5__example": {
+        "n_trials": 3,
+        "n_errors": 1,
+        "metrics": [
+          {
+            "reward": 0.5,
+            "field_score": 0.75
+          }
+        ],
+        "pass_at_k": {},
+        "reward_stats": {
+          "reward": {
+            "1.0": [
+              "fix-median__a1"
+            ],
+            "0.0": [
+              "count-words__b2"
+            ]
+          }
+        },
+        "exception_stats": {
+          "AgentTimeoutError": [
+            "hello-world__c3"
+          ]
+        }
+      }
+    }
+  }
+}
