@@ -4,7 +4,8 @@ Usage: report.py RESULT_JSON
 
 Reads hbench's result.json, and beside it the job's config.json and lock.json and each trial's result.json.
 A trial is solved when its reward is 1. Each eval (agent, model and tasks) gets a row: solved trials and the
-pass rate, mean reward, pass@k, errors, agent time, tokens and cost. Below come what ran (hbench, agent,
+pass rate, mean reward, pass@k, errors, agent time, tokens and cost. Mermaid charts follow: a pie of solved,
+failed and errored trials, and a bar of each eval's mean reward. Below come what ran (hbench, agent,
 model, tasks and digest), the command that opens the job in hbench's dashboard when the job is uploaded
 (HBENCH_ARTIFACT_NAME), the tasks' own metrics, the errors by type, and a row per trial, errors and
 failures first. mean-reward is the trial-weighted mean of the evals' mean rewards, as hbench computes them
@@ -266,6 +267,35 @@ def trial_table(trials):
     return lines
 
 
+def chart_label(name):
+    return re.sub(r'["\[\]]', "", name.replace("__", " / "))
+
+
+def charts(rows, trials):
+    n_errors = sum(1 for trial in trials if trial["error"]) if trials else sum(row["errors"] for row in rows)
+    n_solved = sum(row["solved"] for row in rows)
+    n_failed = (len(trials) if trials else sum(row["trials"] for row in rows)) - n_solved - n_errors
+    slices = [(label, count) for label, count in (("Solved", n_solved), ("Failed", n_failed), ("Error", n_errors)) if count > 0]
+    lines = []
+    if slices:
+        lines += ["```mermaid", "pie showData", "    title Trials", *[f'    "{label}" : {count}' for label, count in slices], "```", ""]
+    scored = [row for row in rows if row["mean"] is not None]
+    if scored:
+        labels = ", ".join(f'"{chart_label(row["name"])}"' for row in scored)
+        values = ", ".join(f"{row['mean']:.3f}" for row in scored)
+        lines += [
+            "```mermaid",
+            "xychart-beta",
+            '    title "Mean reward by eval"',
+            f"    x-axis [{labels}]",
+            '    y-axis "Mean reward" 0 --> 1',
+            f"    bar [{values}]",
+            "```",
+            "",
+        ]
+    return lines
+
+
 def dashboard_command(job_name):
     artifact = os.environ.get("HBENCH_ARTIFACT_NAME")
     repository, run_id = os.environ.get("GITHUB_REPOSITORY"), os.environ.get("GITHUB_RUN_ID")
@@ -290,7 +320,7 @@ def summary(result, config, lock, rows, trials, mean, threshold, job_name):
     if threshold is not None:
         passed = mean is not None and mean >= threshold
         verdict += f" {'✅ At or above' if passed else '❌ Below'} min-mean-reward {threshold:g}."
-    lines += [verdict, ""]
+    lines += [verdict, "", *charts(rows, trials)]
     command = dashboard_command(job_name)
     if command:
         lines += [*command, ""]

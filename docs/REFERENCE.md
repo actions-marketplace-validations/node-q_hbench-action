@@ -62,6 +62,8 @@ The job summary has:
   the agent's time in total and per trial (median), tokens in and out, and the cost in total and per
   solved trial;
 - whether the mean reward reached `min-mean-reward`;
+- two Mermaid charts: a pie of the trials solved, failed and ended in an error, and a bar of each eval's
+  mean reward;
 - when the job is uploaded, the command that downloads it and opens it in hbench's interactive dashboard,
   `gh run download <run> -R <repository> -n <artifact> -D hbench-jobs/<job> && hbench view hbench-jobs`;
 - what ran: the hbench release and results epoch, the agent and model, the tasks with their registry and

@@ -70,6 +70,11 @@ class AgentJobTest(unittest.TestCase):
         self.assertLess(error, failure)
         self.assertLess(failure, solved)
 
+    def test_charts_show_the_trials_by_outcome_and_the_mean_reward_by_eval(self):
+        self.assertIn('```mermaid\npie showData\n    title Trials\n    "Solved" : 1\n    "Failed" : 1\n    "Error" : 1\n```', self.summary)
+        self.assertIn('    x-axis ["claude-code / claude-opus-5-5 / example"]', self.summary)
+        self.assertIn("    bar [0.500]", self.summary)
+
     def test_an_uploaded_job_gets_the_command_that_opens_it_in_the_dashboard(self):
         summary = run_report(AGENT_JOB, artifact="hbench-bench")[2]
         self.assertIn("View interactive dashboard by hbench:", summary)
@@ -98,6 +103,9 @@ class OracleJobTest(unittest.TestCase):
         self.assertIn("- **Tasks** `tasks`", summary)
         self.assertIn("✅ At or above min-mean-reward 1.", summary)
         self.assertNotIn("### Errors", summary)
+        self.assertIn('    "Solved" : 1\n```', summary)
+        self.assertNotIn('"Failed"', summary)
+        self.assertNotIn('"Error"', summary)
 
 
 if __name__ == "__main__":
