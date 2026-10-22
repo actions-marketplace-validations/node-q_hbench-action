@@ -142,7 +142,19 @@ in your repository, read from `working-directory`:
 ]
 ```
 
-Run one of its datasets with `dataset: my-tasks@1.0` and `registry: registry.json`, or the file's https:// URL.
+Run one of its datasets by the file's path, or by its https:// URL:
+
+```yaml
+- uses: actions/checkout@v7
+- uses: node-q/hbench-action@v1
+  with:
+    dataset: my-tasks@1.0
+    registry: registry.json       # or https://raw.githubusercontent.com/you/tasks/<commit>/registry.json
+    agent: oracle
+```
+
+On your machine, the same run is `hbench run -d my-tasks@1.0 --registry-path registry.json -a oracle`, or
+`--registry-url <https URL>`.
 
 ## Agents
 
