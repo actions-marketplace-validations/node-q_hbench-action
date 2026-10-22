@@ -71,9 +71,15 @@ class AgentJobTest(unittest.TestCase):
         self.assertLess(failure, solved)
 
     def test_charts_show_the_trials_by_outcome_and_the_mean_reward_by_eval(self):
-        self.assertIn('```mermaid\npie showData\n    title Trials\n    "Solved" : 1\n    "Failed" : 1\n    "Error" : 1\n```', self.summary)
+        self.assertIn('pie showData\n    title Trials\n    "Solved" : 1\n    "Failed" : 1\n    "Error" : 1\n```', self.summary)
         self.assertIn('    x-axis ["claude-code / claude-opus-5-5 / example"]', self.summary)
         self.assertIn("    bar [0.500]", self.summary)
+
+    def test_charts_are_small_and_in_hbench_colours(self):
+        self.assertIn('"pie1": "#137d41", "pie2": "#c52c2a", "pie3": "#ad7300"', self.summary)
+        self.assertIn('"plotColorPalette": "#076be3"', self.summary)
+        self.assertIn('"width": 360, "height": 220, "useMaxWidth": false', self.summary)
+        self.assertIn('"pie": {"useMaxWidth": false', self.summary)
 
     def test_an_uploaded_job_gets_the_command_that_opens_it_in_the_dashboard(self):
         summary = run_report(AGENT_JOB, artifact="hbench-bench")[2]
