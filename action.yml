@@ -1,9 +1,9 @@
-name: Run hbench
-description: Install hbench, run AI agents on benchmark tasks in Docker, and report their scores in the job summary.
+name: Harness Benchmark
+description: Which coding agent is best for your code? Run Claude Code, Codex, Gemini CLI and 40+ more on your tasks in CI and find out.
 author: node-q
 
 branding:
-  icon: activity
+  icon: bar-chart-2
   color: blue
 
 inputs:
