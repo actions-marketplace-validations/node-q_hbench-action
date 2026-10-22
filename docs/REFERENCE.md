@@ -17,8 +17,8 @@ The [README](../README.md) has the short version.
 | `verify-provenance` | `auto` | Check the release archive's build provenance with gh attestation verify. true, false, or auto (when the GitHub CLI is installed). |
 | `token` | `${{ github.token }}` | GitHub token for gh attestation verify. |
 | `path` |  | A task directory, or a directory of task directories (hbench run --path). Set path, dataset or config to run; with none of them the action only installs hbench. |
-| `dataset` |  | Dataset to run, name@version (hbench run --dataset). Needs registry, or --registry-url in args. |
-| `registry` |  | OCI dataset registry, oci://<registry>/<namespace>, or OCI image layouts on disk, oci-layout:<dir> (hbench run --registry). |
+| `dataset` |  | Dataset to run, name@version (hbench run --dataset). Needs registry. |
+| `registry` |  | Where the dataset is listed. An OCI registry, oci://<registry>/<namespace>, or OCI image layouts on disk, oci-layout:<dir> (hbench run --registry); or a registry.json, by https:// URL (--registry-url) or path (--registry-path). |
 | `config` |  | Job config, YAML or JSON (hbench run --config). The other inputs override it. |
 | `agent` |  | Agent to run (hbench run --agent); hbench agents list shows them. Empty runs hbench's default, the oracle. |
 | `model` |  | Model, as provider/name (hbench run --model). |
@@ -106,6 +106,17 @@ Run the same bytes every time: record the dataset's manifest digest once with `-
     locked: 'true'          # reads ./hbench.lock from working-directory
 ```
 
+Run a dataset listed in a `registry.json`, by path or by https:// URL. A task with `git_url` is checked out at
+`git_commit_id`; one without is read from `working-directory`:
+
+```yaml
+- uses: actions/checkout@v7
+- uses: node-q/hbench-action@v1
+  with:
+    dataset: my-tasks@1.0
+    registry: registry.json   # or https://raw.githubusercontent.com/you/tasks/<commit>/registry.json
+```
+
 Install only, then call hbench yourself:
 
 ```yaml
@@ -158,7 +169,8 @@ tests/tasks/        a one-task folder the tests run
 `.github/workflows/test.yml` runs on GitHub-hosted runners only: actionlint and shellcheck; installing
 `latest` and a pinned release on Linux x86_64 and arm64 and macOS arm64 and x86_64, with provenance checked;
 the oracle on the local task with `min-mean-reward: '1'`; the `nop` agent, which must fail the step on its
-score; and two tasks of an OCI dataset with `--lock-write`.
+score; two tasks of an OCI dataset with `--lock-write`; and a dataset listed in a `registry.json`, by path and
+by URL.
 
 To try the scripts outside GitHub, set the variables the runner sets (`RUNNER_TEMP`, `GITHUB_ACTION_PATH`,
 `GITHUB_OUTPUT`, `GITHUB_PATH`, `GITHUB_STEP_SUMMARY`) and the `INPUT_*` ones `action.yml` passes, then run

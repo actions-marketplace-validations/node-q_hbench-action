@@ -44,7 +44,15 @@ arguments=(run)
 add_option --config "$INPUT_CONFIG"
 add_option --path "$INPUT_PATH"
 add_option --dataset "$INPUT_DATASET"
-add_option --registry "$INPUT_REGISTRY"
+case "$INPUT_REGISTRY" in
+  "") ;;
+  oci://* | oci-layout:*) arguments+=(--registry "$INPUT_REGISTRY") ;;
+  http://* | https://*) arguments+=(--registry-url "$INPUT_REGISTRY") ;;
+  *)
+    [[ -f "$INPUT_REGISTRY" ]] || fail "registry is '$INPUT_REGISTRY', which is not a file; use oci://<registry>/<namespace>, oci-layout:<dir>, or a registry.json URL or path"
+    arguments+=(--registry-path "$INPUT_REGISTRY")
+    ;;
+esac
 add_option --agent "$INPUT_AGENT"
 add_option --model "$INPUT_MODEL"
 add_option --n-tasks "$INPUT_N_TASKS"

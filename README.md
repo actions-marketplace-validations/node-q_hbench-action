@@ -91,8 +91,10 @@ For hbench itself, the docs are at [nodeq.tech/docs](https://nodeq.tech/docs):
   with:
     # What to run: one of these
     path: tasks                                   # a local task, or a folder of tasks
-    # dataset: terminal-bench@2.0.1               # or a dataset, with its registry
+    # dataset: terminal-bench@2.0.1               # or a dataset from an OCI registry
     # registry: oci://ghcr.io/node-q/hbench-datasets
+    # dataset: my-tasks@1.0                       # or a dataset listed in a registry.json
+    # registry: registry.json                     #   a path, or an https:// URL
     # config: job.yaml                            # or a job config (YAML/JSON)
 
     # Who runs it
@@ -110,6 +112,26 @@ For hbench itself, the docs are at [nodeq.tech/docs](https://nodeq.tech/docs):
 
 With none of `path`, `dataset` or `config`, the action only installs hbench, and later steps can call
 `hbench` themselves. Useful outputs: `mean-reward`, `n-trials`, `n-errors` and `job-dir`.
+
+A `registry.json` lists datasets and where each of their tasks is: a git repository at a commit, or a folder
+in your repository, read from `working-directory`:
+
+```json
+[
+  {
+    "name": "my-tasks",
+    "version": "1.0",
+    "description": "Tasks from our own codebase",
+    "tasks": [
+      { "name": "fix-the-parser", "git_url": "https://github.com/you/tasks.git",
+        "git_commit_id": "<full commit SHA>", "path": "fix-the-parser" },
+      { "name": "hello-world", "path": "tasks/hello-world" }
+    ]
+  }
+]
+```
+
+Run one of its datasets with `dataset: my-tasks@1.0` and `registry: registry.json`, or the file's https:// URL.
 
 ## Agents
 
