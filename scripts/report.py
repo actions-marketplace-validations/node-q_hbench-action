@@ -4,8 +4,9 @@ Usage: report.py RESULT_JSON
 
 Reads hbench's result.json, and beside it the job's config.json and lock.json and each trial's result.json.
 A trial is solved when its reward is 1. Each eval (agent, model and tasks) gets a row: solved trials and the
-pass rate, mean reward, pass@k, errors, agent time, tokens and cost. Mermaid charts follow, small and in
-hbench's colours: a pie of solved, failed and errored trials, and a bar of each eval's mean reward. Below come what ran (hbench, agent,
+pass rate, mean reward, pass@k, errors, agent time, tokens and cost. Charts follow, small and in
+hbench's colours: a table of solved, failed and errored trials with a bar of each share, and a Mermaid
+bar chart of each eval's mean reward. Below come what ran (hbench, agent,
 model, tasks and digest), the command that opens the job in hbench's dashboard when the job is uploaded
 (HBENCH_ARTIFACT_NAME), the tasks' own metrics, the errors by type, and a row per trial, errors and
 failures first. mean-reward is the trial-weighted mean of the evals' mean rewards, as hbench computes them
@@ -26,7 +27,7 @@ PRIMARY_METRICS = ("reward", "mean")
 HBENCH_ACCENT = "#076be3"
 HBENCH_MUTED = "#5e646d"
 HBENCH_RULE = "#dce0e6"
-OUTCOME_COLORS = {"Solved": "#137d41", "Failed": "#c52c2a", "Error": "#ad7300"}
+SHARE_BAR_WIDTH = 20
 
 
 def numeric(value):
@@ -279,35 +280,14 @@ def charts(rows, trials):
     n_errors = sum(1 for trial in trials if trial["error"]) if trials else sum(row["errors"] for row in rows)
     n_solved = sum(row["solved"] for row in rows)
     n_failed = (len(trials) if trials else sum(row["trials"] for row in rows)) - n_solved - n_errors
-    counts = (("Solved", n_solved), ("Failed", n_failed), ("Error", n_errors))
-    slices = sorted(((label, count) for label, count in counts if count > 0), key=lambda item: -item[1])
+    n_all = n_solved + n_failed + n_errors
     lines = []
-    if slices:
-        pie_theme = {
-            "theme": "base",
-            "pie": {"useMaxWidth": False, "textPosition": 0.7},
-            "themeVariables": {
-                **{f"pie{index}": OUTCOME_COLORS[label] for index, (label, _) in enumerate(slices, start=1)},
-                "pieOpacity": "1",
-                "pieStrokeColor": "#ffffff",
-                "pieOuterStrokeWidth": "0px",
-                "pieTitleTextSize": "14px",
-                "pieTitleTextColor": HBENCH_MUTED,
-                "pieSectionTextSize": "12px",
-                "pieSectionTextColor": "#ffffff",
-                "pieLegendTextSize": "12px",
-                "pieLegendTextColor": HBENCH_MUTED,
-            },
-        }
-        lines += [
-            "```mermaid",
-            f"%%{{init: {json.dumps(pie_theme)}}}%%",
-            "pie showData",
-            "    title Trials",
-            *[f'    "{label}" : {count}' for label, count in slices],
-            "```",
-            "",
-        ]
+    if n_all:
+        lines += ["| Outcome | Trials | Share |", "|---|---:|---|"]
+        for label, count in (("Solved", n_solved), ("Failed", n_failed), ("Error", n_errors)):
+            cells = max(1, round(SHARE_BAR_WIDTH * count / n_all)) if count else 0
+            lines.append(f"| {label} | {count} | {'█' * cells} {percent(count, n_all)} |")
+        lines.append("")
     scored = [row for row in rows if row["mean"] is not None]
     if scored:
         labels = ", ".join(f'"{chart_label(row["name"])}"' for row in scored)
