@@ -1,5 +1,5 @@
 name: Harness Benchmark
-description: Install hbench, run AI agents on benchmark tasks in Docker, and report their scores in the job summary.
+description: 'Benchmark coding agents in CI: run Claude Code, Codex, Gemini CLI and more on your tasks, and see how many they solve.'
 author: node-q
 
 branding:
