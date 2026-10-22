@@ -46,11 +46,13 @@ if [[ ! -x "$install_directory/hbench" || ! -f "$install_directory.complete" ]];
 
   checksum_line="$(awk -v name="$archive" '$2 == name' "$download_directory/SHA256SUMS")"
   [[ -n "$checksum_line" && "$(wc -l <<<"$checksum_line")" -eq 1 ]] || fail "SHA256SUMS of $tag lists $archive no or several times"
-  if sha256sum --version > /dev/null 2>&1; then
-    (cd "$download_directory" && sha256sum --check --strict <<<"$checksum_line") || fail "$archive does not match SHA256SUMS"
+  if [[ "$(uname -s)" == Darwin ]]; then
+    actual_sha256="$(shasum -a 256 "$download_directory/$archive")"
   else
-    (cd "$download_directory" && shasum -a 256 -c <<<"$checksum_line") || fail "$archive does not match SHA256SUMS"
+    actual_sha256="$(sha256sum "$download_directory/$archive")"
   fi
+  [[ "${actual_sha256%% *}" == "${checksum_line%% *}" ]] || fail "$archive does not match SHA256SUMS"
+  echo "$archive: OK"
 
   if [[ "$verify_provenance" == true ]]; then
     command -v gh > /dev/null || fail "verify-provenance is true, but the GitHub CLI (gh) is not installed"
