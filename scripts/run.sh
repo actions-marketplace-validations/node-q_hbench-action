@@ -65,7 +65,8 @@ arguments+=(--jobs-dir "$jobs_directory" --job-name "$job_name")
 add_lines "" "$INPUT_ARGS"
 
 echo "job-dir=$job_directory" >> "$GITHUB_OUTPUT"
-echo "artifact-name=${INPUT_ARTIFACT_NAME:-hbench-$job_name}" >> "$GITHUB_OUTPUT"
+artifact_name="${INPUT_ARTIFACT_NAME:-hbench-$job_name}"
+echo "artifact-name=$artifact_name" >> "$GITHUB_OUTPUT"
 
 printf 'hbench'
 printf ' %q' "${arguments[@]}"
@@ -78,6 +79,9 @@ if [[ ! -f "$job_directory/result.json" ]]; then
 fi
 
 report_status=0
+if [[ "${INPUT_UPLOAD_ARTIFACT:-true}" == true ]]; then
+  export HBENCH_ARTIFACT_NAME="$artifact_name"
+fi
 python3 "$GITHUB_ACTION_PATH/scripts/report.py" "$job_directory/result.json" || report_status=$?
 if [[ "$status" -ne 0 ]]; then
   fail "hbench run exited $status"

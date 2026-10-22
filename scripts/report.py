@@ -5,7 +5,8 @@ Usage: report.py RESULT_JSON
 Reads hbench's result.json, and beside it the job's config.json and lock.json and each trial's result.json.
 A trial is solved when its reward is 1. Each eval (agent, model and tasks) gets a row: solved trials and the
 pass rate, mean reward, pass@k, errors, agent time, tokens and cost. Below come what ran (hbench, agent,
-model, tasks and digest), the tasks' own metrics, the errors by type, and a row per trial, errors and
+model, tasks and digest), the command that opens the job in hbench's dashboard when the job is uploaded
+(HBENCH_ARTIFACT_NAME), the tasks' own metrics, the errors by type, and a row per trial, errors and
 failures first. mean-reward is the trial-weighted mean of the evals' mean rewards, as hbench computes them
 (a task's reward.json `reward`, or its reward.txt). Exits 1 when INPUT_MIN_MEAN_REWARD is set and
 mean-reward is below it.
@@ -265,7 +266,21 @@ def trial_table(trials):
     return lines
 
 
-def summary(result, config, lock, rows, trials, mean, threshold):
+def dashboard_command(job_name):
+    artifact = os.environ.get("HBENCH_ARTIFACT_NAME")
+    repository, run_id = os.environ.get("GITHUB_REPOSITORY"), os.environ.get("GITHUB_RUN_ID")
+    if not (artifact and repository and run_id):
+        return []
+    return [
+        "View interactive dashboard by hbench:",
+        "",
+        "```bash",
+        f"gh run download {run_id} -R {repository} -n {artifact} -D hbench-jobs/{job_name} && hbench view hbench-jobs",
+        "```",
+    ]
+
+
+def summary(result, config, lock, rows, trials, mean, threshold, job_name):
     n_trials = sum(row["trials"] for row in rows)
     n_solved = sum(row["solved"] for row in rows)
     lines = ["## Harness Benchmark", "", *scorecard(rows), ""]
@@ -275,7 +290,11 @@ def summary(result, config, lock, rows, trials, mean, threshold):
     if threshold is not None:
         passed = mean is not None and mean >= threshold
         verdict += f" {'✅ At or above' if passed else '❌ Below'} min-mean-reward {threshold:g}."
-    lines += [verdict, "", "### What ran", "", *run_details(result, config, lock)]
+    lines += [verdict, ""]
+    command = dashboard_command(job_name)
+    if command:
+        lines += [*command, ""]
+    lines += ["### What ran", "", *run_details(result, config, lock)]
     for row in rows:
         if row["other_metrics"]:
             metrics = ", ".join(f"`{key}` {score(value)}" for key, value in row["other_metrics"].items())
@@ -331,7 +350,7 @@ def main(arguments):
         f"pass-rate={round(n_solved / n_trials, 6) if n_trials else ''}\n"
         f"cost-usd={'' if cost is None else round(cost, 6)}\n",
     )
-    report = summary(result, config, lock, rows, trials, mean, threshold)
+    report = summary(result, config, lock, rows, trials, mean, threshold, job_directory.name)
     append("GITHUB_STEP_SUMMARY", report)
     print(report)
     if threshold is not None and (mean is None or mean < threshold):

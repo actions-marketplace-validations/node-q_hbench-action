@@ -16,13 +16,16 @@ AGENT_JOB = HERE / "report" / "agent-job" / "result.json"
 ORACLE_JOB = HERE / "report" / "oracle-job" / "result.json"
 
 
-def run_report(result_path, min_mean_reward=""):
+def run_report(result_path, min_mean_reward="", artifact=""):
     with tempfile.TemporaryDirectory() as directory:
         output, summary = pathlib.Path(directory, "output"), pathlib.Path(directory, "summary")
         environment = {
             "GITHUB_OUTPUT": str(output),
             "GITHUB_STEP_SUMMARY": str(summary),
             "INPUT_MIN_MEAN_REWARD": min_mean_reward,
+            "HBENCH_ARTIFACT_NAME": artifact,
+            "GITHUB_REPOSITORY": "you/tasks",
+            "GITHUB_RUN_ID": "123456",
         }
         with mock.patch.dict(os.environ, environment), contextlib.redirect_stdout(io.StringIO()):
             status = report.main([str(result_path)])
@@ -66,6 +69,17 @@ class AgentJobTest(unittest.TestCase):
         solved = self.summary.index("| `example/fix-median` | ✅ solved | 1.000 |")
         self.assertLess(error, failure)
         self.assertLess(failure, solved)
+
+    def test_an_uploaded_job_gets_the_command_that_opens_it_in_the_dashboard(self):
+        summary = run_report(AGENT_JOB, artifact="hbench-bench")[2]
+        self.assertIn("View interactive dashboard by hbench:", summary)
+        self.assertIn(
+            "gh run download 123456 -R you/tasks -n hbench-bench -D hbench-jobs/agent-job && hbench view hbench-jobs",
+            summary,
+        )
+
+    def test_a_job_that_is_not_uploaded_gets_no_dashboard_command(self):
+        self.assertNotIn("View interactive dashboard", self.summary)
 
     def test_mean_reward_below_the_threshold_fails(self):
         self.assertEqual(run_report(AGENT_JOB, "0.6")[0], 1)

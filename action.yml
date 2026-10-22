@@ -143,6 +143,7 @@ runs:
         INPUT_JOBS_DIR: ${{ inputs.jobs-dir }}
         INPUT_MIN_MEAN_REWARD: ${{ inputs.min-mean-reward }}
         INPUT_ARTIFACT_NAME: ${{ inputs.artifact-name }}
+        INPUT_UPLOAD_ARTIFACT: ${{ inputs.upload-artifact }}
       run: '"$GITHUB_ACTION_PATH/scripts/run.sh"'
 
     - name: Upload the job directory
