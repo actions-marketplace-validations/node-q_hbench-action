@@ -1,0 +1,148 @@
+name: Run hbench
+description: Install hbench, run AI agents on benchmark tasks in Docker, and report their scores in the job summary.
+author: node-q
+
+branding:
+  icon: activity
+  color: blue
+
+inputs:
+  version:
+    description: hbench release to install, such as v0.3.0, or latest.
+    default: latest
+  verify-provenance:
+    description: Check the release archive's build provenance with gh attestation verify. true, false, or auto (when the GitHub CLI is installed).
+    default: auto
+  token:
+    description: GitHub token for gh attestation verify.
+    default: ${{ github.token }}
+  path:
+    description: A task directory, or a directory of task directories (hbench run --path). Set path, dataset or config to run; with none of them the action only installs hbench.
+    default: ''
+  dataset:
+    description: Dataset to run, name@version (hbench run --dataset). Needs registry, or --registry-url in args.
+    default: ''
+  registry:
+    description: OCI dataset registry, oci://<registry>/<namespace>, or OCI image layouts on disk, oci-layout:<dir> (hbench run --registry).
+    default: ''
+  config:
+    description: Job config, YAML or JSON (hbench run --config). The other inputs override it.
+    default: ''
+  agent:
+    description: Agent to run (hbench run --agent); hbench agents list shows them. Empty runs hbench's default, the oracle.
+    default: ''
+  model:
+    description: Model, as provider/name (hbench run --model).
+    default: ''
+  n-tasks:
+    description: Run at most this many tasks (hbench run --n-tasks).
+    default: ''
+  n-attempts:
+    description: Attempts per task (hbench run --n-attempts).
+    default: ''
+  n-concurrent:
+    description: Trials to run at once (hbench run --n-concurrent).
+    default: ''
+  include:
+    description: Only tasks whose names match these globs, one per line (hbench run --include-task-name).
+    default: ''
+  exclude:
+    description: Skip tasks whose names match these globs, one per line (hbench run --exclude-task-name).
+    default: ''
+  locked:
+    description: Refuse an OCI dataset that is not in hbench.lock, or whose tag now resolves to another digest (hbench run --locked).
+    default: 'false'
+  args:
+    description: More hbench run arguments, one per line, each line a whole argument.
+    default: ''
+  working-directory:
+    description: Directory to run hbench in. Relative paths and hbench.lock are read from it.
+    default: .
+  jobs-dir:
+    description: Where hbench writes the job directory. Empty uses hbench-jobs under the runner's temporary directory.
+    default: ''
+  min-mean-reward:
+    description: Fail the step when the mean reward over every trial is below this number, from 0 to 1. Empty never fails on the score.
+    default: ''
+  upload-artifact:
+    description: Upload the job directory as a workflow artifact.
+    default: 'true'
+  artifact-name:
+    description: Name of the artifact. Empty uses hbench-<job id>-<time>-<random>; set it to something stable in a matrix.
+    default: ''
+  artifact-retention-days:
+    description: Days to keep the artifact. Empty uses the repository's setting.
+    default: ''
+
+outputs:
+  version:
+    description: The hbench release installed, such as v0.3.0.
+    value: ${{ steps.install.outputs.version }}
+  hbench-path:
+    description: Path of the installed hbench binary.
+    value: ${{ steps.install.outputs.hbench-path }}
+  job-dir:
+    description: The job directory hbench wrote.
+    value: ${{ steps.run.outputs.job-dir }}
+  result-path:
+    description: The job's result.json.
+    value: ${{ steps.run.outputs.result-path }}
+  mean-reward:
+    description: Mean reward over every trial of every eval.
+    value: ${{ steps.run.outputs.mean-reward }}
+  n-trials:
+    description: Trials run.
+    value: ${{ steps.run.outputs.n-trials }}
+  n-errors:
+    description: Trials that ended in an error.
+    value: ${{ steps.run.outputs.n-errors }}
+  artifact-id:
+    description: ID of the uploaded artifact.
+    value: ${{ steps.upload.outputs.artifact-id }}
+
+runs:
+  using: composite
+  steps:
+    - name: Install hbench
+      id: install
+      shell: bash
+      env:
+        INPUT_VERSION: ${{ inputs.version }}
+        INPUT_VERIFY_PROVENANCE: ${{ inputs.verify-provenance }}
+        INPUT_TOKEN: ${{ inputs.token }}
+      run: '"$GITHUB_ACTION_PATH/scripts/install.sh"'
+
+    - name: Run hbench
+      id: run
+      if: inputs.path != '' || inputs.dataset != '' || inputs.config != ''
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        INPUT_PATH: ${{ inputs.path }}
+        INPUT_DATASET: ${{ inputs.dataset }}
+        INPUT_REGISTRY: ${{ inputs.registry }}
+        INPUT_CONFIG: ${{ inputs.config }}
+        INPUT_AGENT: ${{ inputs.agent }}
+        INPUT_MODEL: ${{ inputs.model }}
+        INPUT_N_TASKS: ${{ inputs.n-tasks }}
+        INPUT_N_ATTEMPTS: ${{ inputs.n-attempts }}
+        INPUT_N_CONCURRENT: ${{ inputs.n-concurrent }}
+        INPUT_INCLUDE: ${{ inputs.include }}
+        INPUT_EXCLUDE: ${{ inputs.exclude }}
+        INPUT_LOCKED: ${{ inputs.locked }}
+        INPUT_ARGS: ${{ inputs.args }}
+        INPUT_JOBS_DIR: ${{ inputs.jobs-dir }}
+        INPUT_MIN_MEAN_REWARD: ${{ inputs.min-mean-reward }}
+        INPUT_ARTIFACT_NAME: ${{ inputs.artifact-name }}
+      run: '"$GITHUB_ACTION_PATH/scripts/run.sh"'
+
+    - name: Upload the job directory
+      id: upload
+      if: always() && inputs.upload-artifact == 'true' && steps.run.outputs.job-dir != ''
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+      with:
+        name: ${{ steps.run.outputs.artifact-name }}
+        path: ${{ steps.run.outputs.job-dir }}
+        retention-days: ${{ inputs.artifact-retention-days }}
+        if-no-files-found: warn
+        include-hidden-files: false
