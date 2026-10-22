@@ -169,7 +169,7 @@ Each agent reads its key from the environment, so pass it in the step's `env` fr
 | `oracle` | Each task's reference solution, to check the tasks | | |
 | … and 40 more | the lists below | | |
 
-The action runs the agents and providers of the hbench release it installs. With hbench 0.3.0, that is 46
+The action runs the agents and providers of the hbench release it installs. With hbench, that is 46
 agents, and 51 providers for the agents that take any model. `hbench agents list` prints the agents of the
 release you have.
 
