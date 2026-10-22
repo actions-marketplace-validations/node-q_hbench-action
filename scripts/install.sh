@@ -46,10 +46,10 @@ if [[ ! -x "$install_directory/hbench" || ! -f "$install_directory.complete" ]];
 
   checksum_line="$(awk -v name="$archive" '$2 == name' "$download_directory/SHA256SUMS")"
   [[ -n "$checksum_line" && "$(wc -l <<<"$checksum_line")" -eq 1 ]] || fail "SHA256SUMS of $tag lists $archive no or several times"
-  if command -v sha256sum > /dev/null; then
+  if sha256sum --version > /dev/null 2>&1; then
     (cd "$download_directory" && sha256sum --check --strict <<<"$checksum_line") || fail "$archive does not match SHA256SUMS"
   else
-    (cd "$download_directory" && shasum -a 256 --check <<<"$checksum_line") || fail "$archive does not match SHA256SUMS"
+    (cd "$download_directory" && shasum -a 256 -c <<<"$checksum_line") || fail "$archive does not match SHA256SUMS"
   fi
 
   if [[ "$verify_provenance" == true ]]; then
