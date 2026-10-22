@@ -1,5 +1,5 @@
 name: Harness Benchmark
-description: 'Benchmark coding agents in CI: run Claude Code, Codex, Gemini CLI and more on your tasks, and see how many they solve.'
+description: Which coding agent is best for your code? Run Claude Code, Codex, Gemini CLI and 40+ more on your tasks in CI and find out.
 author: node-q
 
 branding:
