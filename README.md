@@ -16,58 +16,34 @@
 
 # hbench-action
 
-A GitHub Action that installs [hbench](https://github.com/node-q/hbench), runs AI agents on benchmark tasks in
-Docker, and reports their scores in the job summary.
+A GitHub Action for [hbench](https://github.com/node-q/hbench), the benchmark engine behind
+[Harness Playground](https://nodeq.tech), by node-q.
 
-It installs a release of node-q/hbench after checking its `SHA256SUMS` and its build provenance, runs
-`hbench run` on a local task folder, an OCI dataset or a job config, writes each eval's mean reward and pass@k
-to the job summary, uploads the job directory as an artifact, and can fail the step when the mean reward is
-below a threshold. With no tasks to run, it only installs hbench.
+Run coding agents (Claude Code, Codex, Gemini CLI and more) on benchmark tasks in your workflows, and see how
+many they solve in the job summary.
 
+- [Installation](#installation)
+- [Quick start](#quick-start)
+- [Docs](#docs)
 - [Usage](#usage)
-- [Examples](#examples)
-- [Inputs](#inputs) · [Outputs](#outputs)
-- [Security](#security)
-- [Development](#development)
+- [Agents](#agents)
 - [License](#license)
 - [Contributors and contact](#contributors-and-contact)
 
-## Usage
+## Installation
 
-Requirements: a Linux runner with Docker for `run` (GitHub's `ubuntu-*` runners have it); installing alone
-also works on macOS.
-
-```yaml
-- uses: actions/checkout@v7
-- uses: node-q/hbench-action@v1
-  with:
-    path: tasks               # a task directory, or a directory of task directories
-    min-mean-reward: '1'      # fail the step below this mean reward
-```
-
-`path`, `dataset` and `config` choose what to run. Set one of them to run; with none, the action installs
-hbench, puts it on `PATH` and stops, so later steps can call `hbench` themselves. `agent` defaults to hbench's
-own default, the oracle, which runs each task's reference solution.
-
-Agents read their credentials from the environment, so pass them with the step's `env`:
+You need a Linux runner with Docker. GitHub's `ubuntu-*` runners have it.
 
 ```yaml
 - uses: node-q/hbench-action@v1
-  env:
-    ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-  with:
-    dataset: terminal-bench@2.0.1
-    registry: oci://ghcr.io/node-q/hbench-datasets
-    agent: claude-code
-    model: anthropic/claude-opus-5-5
 ```
 
-`hbench agents list` names every agent, and hbench's README lists the
-[variables each agent reads](https://github.com/node-q/hbench#environment-variables).
+The action installs hbench and checks its checksum and build provenance before it runs.
 
-## Examples
+## Quick start
 
-Check every task in a repository with the oracle on each pull request, so a broken test or solution fails CI:
+Check every task in your repository with the oracle, which runs each task's reference solution, on each
+pull request:
 
 ```yaml
 name: Tasks
@@ -80,148 +56,73 @@ jobs:
       - uses: node-q/hbench-action@v1
         with:
           path: tasks
-          n-concurrent: '4'
-          min-mean-reward: '1'
+          min-mean-reward: 1
 ```
 
-Compare models on the same tasks, one job each, with stable artifact names:
+To run Claude Code instead, add your Anthropic key as a repository secret and pass it in `env`:
 
 ```yaml
-jobs:
-  bench:
-    runs-on: ubuntu-24.04
-    strategy:
-      matrix:
-        model: [anthropic/claude-opus-5-5, openai/gpt-5]
-    steps:
       - uses: node-q/hbench-action@v1
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         with:
-          dataset: humaneval-plus@1.0
+          dataset: terminal-bench@2.0.1
           registry: oci://ghcr.io/node-q/hbench-datasets
-          agent: terminus-2
-          model: ${{ matrix.model }}
-          n-concurrent: '4'
-          artifact-name: hbench-${{ strategy.job-index }}
+          agent: claude-code
+          model: anthropic/claude-opus-5-5
+          n-tasks: 5
 ```
 
-Run the same bytes every time: record the dataset's manifest digest once with `--lock-write`, commit
-`hbench.lock`, and run with `locked`, which refuses a dataset whose tag has moved:
+The scores go to the job summary, and the job's files are uploaded as an artifact.
 
-```yaml
-- uses: actions/checkout@v7
-- uses: node-q/hbench-action@v1
-  with:
-    dataset: terminal-bench@2.0.1
-    registry: oci://ghcr.io/node-q/hbench-datasets
-    locked: 'true'          # reads ./hbench.lock from working-directory
-```
+## Docs
 
-Install only, then call hbench yourself:
+Every input and output, more examples and the security notes are in [docs/REFERENCE.md](docs/REFERENCE.md).
+For hbench itself, the docs are at [nodeq.tech/docs](https://nodeq.tech/docs):
 
-```yaml
-- uses: node-q/hbench-action@v1
-  id: hbench
-  with:
-    version: v0.3.0
-- run: hbench tasks check --path tasks
-```
+- [Agents](https://nodeq.tech/docs/reference/agents) and the [hbench command line](https://nodeq.tech/docs/reference/hbench-cli)
+- [Read your result](https://nodeq.tech/docs/get-started/read-your-result)
+- [Troubleshooting](https://nodeq.tech/docs/troubleshooting)
 
-Pass any other `hbench run` flag through `args`, one argument per line:
+## Usage
 
 ```yaml
 - uses: node-q/hbench-action@v1
   with:
-    path: tasks
-    args: |
-      --timeout-multiplier
-      2
-      --fail-on-error
+    # What to run: one of these
+    path: tasks                                   # a local task, or a folder of tasks
+    # dataset: terminal-bench@2.0.1               # or a dataset, with its registry
+    # registry: oci://ghcr.io/node-q/hbench-datasets
+    # config: job.yaml                            # or a job config (YAML/JSON)
+
+    # Who runs it
+    agent: claude-code                            # default: oracle
+    model: anthropic/claude-opus-5-5
+
+    # How much
+    n-tasks: 5                                    # only 5 tasks
+    n-attempts: 3                                 # each task 3 times
+    n-concurrent: 4                               # 4 at a time
+
+    # When it fails
+    min-mean-reward: 0.8                          # fail the step below this mean reward
 ```
 
-## Inputs
+With none of `path`, `dataset` or `config`, the action only installs hbench, and later steps can call
+`hbench` themselves. Useful outputs: `mean-reward`, `n-trials`, `n-errors` and `job-dir`.
 
-| Input | Default | Description |
-|---|---|---|
-| `version` | `latest` | hbench release to install, such as v0.3.0, or latest. |
-| `verify-provenance` | `auto` | Check the release archive's build provenance with gh attestation verify. true, false, or auto (when the GitHub CLI is installed). |
-| `token` | `${{ github.token }}` | GitHub token for gh attestation verify. |
-| `path` |  | A task directory, or a directory of task directories (hbench run --path). Set path, dataset or config to run; with none of them the action only installs hbench. |
-| `dataset` |  | Dataset to run, name@version (hbench run --dataset). Needs registry, or --registry-url in args. |
-| `registry` |  | OCI dataset registry, oci://<registry>/<namespace>, or OCI image layouts on disk, oci-layout:<dir> (hbench run --registry). |
-| `config` |  | Job config, YAML or JSON (hbench run --config). The other inputs override it. |
-| `agent` |  | Agent to run (hbench run --agent); hbench agents list shows them. Empty runs hbench's default, the oracle. |
-| `model` |  | Model, as provider/name (hbench run --model). |
-| `n-tasks` |  | Run at most this many tasks (hbench run --n-tasks). |
-| `n-attempts` |  | Attempts per task (hbench run --n-attempts). |
-| `n-concurrent` |  | Trials to run at once (hbench run --n-concurrent). |
-| `include` |  | Only tasks whose names match these globs, one per line (hbench run --include-task-name). |
-| `exclude` |  | Skip tasks whose names match these globs, one per line (hbench run --exclude-task-name). |
-| `locked` | `false` | Refuse an OCI dataset that is not in hbench.lock, or whose tag now resolves to another digest (hbench run --locked). |
-| `args` |  | More hbench run arguments, one per line, each line a whole argument. |
-| `working-directory` | `.` | Directory to run hbench in. Relative paths and hbench.lock are read from it. |
-| `jobs-dir` |  | Where hbench writes the job directory. Empty uses hbench-jobs under the runner's temporary directory. |
-| `min-mean-reward` |  | Fail the step when the mean reward over every trial is below this number, from 0 to 1. Empty never fails on the score. |
-| `upload-artifact` | `true` | Upload the job directory as a workflow artifact. |
-| `artifact-name` |  | Name of the artifact. Empty uses hbench-<job id>-<time>-<random>; set it to something stable in a matrix. |
-| `artifact-retention-days` |  | Days to keep the artifact. Empty uses the repository's setting. |
+## Agents
 
-## Outputs
+Each agent reads its key from the environment, so pass it in the step's `env` from a secret.
 
-| Output | Description |
-|---|---|
-| `version` | The hbench release installed, such as v0.3.0. |
-| `hbench-path` | Path of the installed hbench binary. |
-| `job-dir` | The job directory hbench wrote. |
-| `result-path` | The job's result.json. |
-| `mean-reward` | Mean reward over every trial of every eval. |
-| `n-trials` | Trials run. |
-| `n-errors` | Trials that ended in an error. |
-| `artifact-id` | ID of the uploaded artifact. |
-
-`mean-reward` weighs each eval's mean reward by its trials. The job summary has a row per eval and lists the
-trials below a reward of 1.
-
-## Security
-
-- **The install is checked.** The archive must match the release's `SHA256SUMS`, and `gh attestation verify`
-  checks that node-q/hbench's release workflow built it on a GitHub-hosted runner, from the tag. GitHub's
-  runners have `gh`; on a runner without it, `verify-provenance: auto` skips that check with a warning and
-  `true` fails.
-- **Secrets stay out of the job directory.** hbench replaces the values of environment variables that look
-  like secrets (`*_KEY`, `*TOKEN`, `*SECRET*`, `*PASSWORD*`, `*CREDENTIAL*`, `*AUTH*`) with `[REDACTED]` in
-  every file it writes. The artifact still holds the agents' trajectories and outputs, and anyone with read
-  access to the repository can download it: set `upload-artifact: 'false'` when they should not.
-- **Inputs never become shell code.** Every input reaches the scripts as an environment variable, and `args`
-  is split by lines only.
-- **Pull requests from forks get no secrets.** Don't work around that with `pull_request_target`: it would run
-  the fork's tasks with your keys.
-- Pin the action to a full commit SHA for the strictest supply chain, as with any action:
-  `uses: node-q/hbench-action@<sha> # v1.0.0`.
-
-## Development
-
-```text
-action.yml          the inputs, outputs and three steps: install, run, upload
-scripts/install.sh  download, checksum, provenance, tool cache
-scripts/run.sh      build the hbench run command line, run it, report
-scripts/report.py   result.json to outputs, job summary and the threshold
-tests/tasks/        a one-task folder the tests run
-```
-
-`.github/workflows/test.yml` runs on GitHub-hosted runners only: actionlint and shellcheck; installing
-`latest` and a pinned release on Linux x86_64 and arm64 and macOS arm64 and x86_64, with provenance checked;
-the oracle on the local task with `min-mean-reward: '1'`; the `nop` agent, which must fail the step on its
-score; and two tasks of an OCI dataset with `--lock-write`.
-
-To try the scripts outside GitHub, set the variables the runner sets (`RUNNER_TEMP`, `GITHUB_ACTION_PATH`,
-`GITHUB_OUTPUT`, `GITHUB_PATH`, `GITHUB_STEP_SUMMARY`) and the `INPUT_*` ones `action.yml` passes, then run
-`scripts/install.sh` and `scripts/run.sh`.
-
-Releases are tagged `vX.Y.Z`, and the major tag `vX` moves to the latest of them. See
-[docs/RELEASING.md](docs/RELEASING.md).
+| Agent | What it runs | Example model (`model`) | Key |
+|---|---|---|---|
+| `claude-code` | Claude Code | `anthropic/claude-opus-5-5` | `ANTHROPIC_API_KEY` |
+| `codex` | OpenAI Codex CLI | `openai/gpt-5` | `OPENAI_API_KEY` |
+| `gemini-cli` | Google Gemini CLI | `google/gemini-3-pro` | `GEMINI_API_KEY` |
+| `deepseek-harness` | DeepSeek's harness ([dsh](https://github.com/deepseek-ai/deepseek-harness)) | `deepseek/deepseek-v4-flash` | `DEEPSEEK_API_KEY` |
+| `oracle` | Each task's reference solution, to check the tasks | | |
+| … and a lot more | [hbench's agent list](https://github.com/node-q/hbench#agents) | | |
 
 ## License
 
@@ -229,9 +130,10 @@ Apache-2.0. See [LICENSE](LICENSE).
 
 ## Contributors and contact
 
-hbench-action is maintained by [node-q](https://github.com/node-q). See the
+hbench-action is built and maintained by [node-q](https://nodeq.tech). See the
 [contributors graph](https://github.com/node-q/hbench-action/graphs/contributors) for everyone who has
 contributed.
 
-Report bugs and request features in [GitHub issues](https://github.com/node-q/hbench-action/issues). For hbench
-itself, use [node-q/hbench's issues](https://github.com/node-q/hbench/issues).
+Report bugs and request features in [GitHub issues](https://github.com/node-q/hbench-action/issues); for hbench
+itself, use [node-q/hbench's issues](https://github.com/node-q/hbench/issues). The full reference is in
+[docs/REFERENCE.md](docs/REFERENCE.md); to release, see [docs/RELEASING.md](docs/RELEASING.md).
