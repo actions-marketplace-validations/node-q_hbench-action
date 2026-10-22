@@ -4,9 +4,8 @@ Usage: report.py RESULT_JSON
 
 Reads hbench's result.json, and beside it the job's config.json and lock.json and each trial's result.json.
 A trial is solved when its reward is 1. Each eval (agent, model and tasks) gets a row: solved trials and the
-pass rate, mean reward, pass@k, errors, agent time, tokens and cost. Charts follow, small and in
-hbench's colours: a table of solved, failed and errored trials with a bar of each share, and a Mermaid
-bar chart of each eval's mean reward. Below come what ran (hbench, agent,
+pass rate, mean reward, pass@k, errors, agent time, tokens and cost. Two tables follow with bars of up to
+20 blocks: the solved, failed and errored trials with each share, and each eval's mean reward. Below come what ran (hbench, agent,
 model, tasks and digest), the command that opens the job in hbench's dashboard when the job is uploaded
 (HBENCH_ARTIFACT_NAME), the tasks' own metrics, the errors by type, and a row per trial, errors and
 failures first. mean-reward is the trial-weighted mean of the evals' mean rewards, as hbench computes them
@@ -24,9 +23,6 @@ import sys
 
 LISTED_TRIALS = 500
 PRIMARY_METRICS = ("reward", "mean")
-HBENCH_ACCENT = "#076be3"
-HBENCH_MUTED = "#5e646d"
-HBENCH_RULE = "#dce0e6"
 SHARE_BAR_WIDTH = 20
 
 
@@ -290,46 +286,12 @@ def charts(rows, trials):
         lines.append("")
     scored = [row for row in rows if row["mean"] is not None]
     if scored:
-        labels = ", ".join(f'"{chart_label(row["name"])}"' for row in scored)
-        values = ", ".join(f"{row['mean']:.3f}" for row in scored)
-        axis = {"labelFontSize": 11, "titleFontSize": 12}
-        bar_theme = {
-            "theme": "base",
-            "xyChart": {
-                "width": min(900, max(360, 140 * len(scored))),
-                "height": 220,
-                "useMaxWidth": False,
-                "titleFontSize": 14,
-                "xAxis": axis,
-                "yAxis": axis,
-            },
-            "themeVariables": {
-                "xyChart": {
-                    "backgroundColor": "transparent",
-                    "plotColorPalette": HBENCH_ACCENT,
-                    "titleColor": HBENCH_MUTED,
-                    "xAxisLabelColor": HBENCH_MUTED,
-                    "xAxisTitleColor": HBENCH_MUTED,
-                    "xAxisLineColor": HBENCH_RULE,
-                    "xAxisTickColor": HBENCH_RULE,
-                    "yAxisLabelColor": HBENCH_MUTED,
-                    "yAxisTitleColor": HBENCH_MUTED,
-                    "yAxisLineColor": HBENCH_RULE,
-                    "yAxisTickColor": HBENCH_RULE,
-                }
-            },
-        }
-        lines += [
-            "```mermaid",
-            f"%%{{init: {json.dumps(bar_theme)}}}%%",
-            "xychart-beta",
-            '    title "Mean reward by eval"',
-            f"    x-axis [{labels}]",
-            '    y-axis "Mean reward" 0 --> 1',
-            f"    bar [{values}]",
-            "```",
-            "",
-        ]
+        lines += ["| Eval | Mean reward |", "|---|---|"]
+        for row in scored:
+            share = min(max(row["mean"], 0.0), 1.0)
+            cells = max(1, round(SHARE_BAR_WIDTH * share)) if share > 0 else 0
+            lines.append(f"| `{chart_label(row['name'])}` | {'█' * cells} {score(row['mean'])} |")
+        lines.append("")
     return lines
 
 

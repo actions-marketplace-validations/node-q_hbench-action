@@ -119,8 +119,8 @@ With none of `path`, `dataset` or `config`, the action only installs hbench, and
 `hbench` themselves. Useful outputs: `pass-rate`, `n-solved`, `mean-reward`, `cost-usd` and `job-dir`.
 
 The job summary shows, for each agent and model, how many tasks it solved, its mean reward and pass@k, its
-errors, the time it spent, its tokens and its cost per solved task; the trials by outcome, with a bar for
-each share, and a chart of each eval's mean reward; the command that opens the job in
+errors, the time it spent, its tokens and its cost per solved task; the trials by outcome and each eval's
+mean reward, each with a bar; the command that opens the job in
 hbench's interactive dashboard on your machine; what ran (the hbench release, the agent, the model, the tasks
 and their digest); the errors by type; and a row per task.
 
