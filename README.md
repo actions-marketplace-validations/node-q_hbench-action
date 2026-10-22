@@ -75,9 +75,14 @@ To run Claude Code instead, add your Anthropic key as a repository secret and pa
 
 The scores go to the job summary, and the job's files are uploaded as an artifact.
 
+For a whole repository to fork, with three tasks, the workflow that checks them on every pull request and
+workflows that run agents on them, see
+[node-q/hbench-action-example](https://github.com/node-q/hbench-action-example).
+
 ## Docs
 
-Every input and output, more examples and the security notes are in [docs/REFERENCE.md](docs/REFERENCE.md).
+Every input and output, more examples and the security notes are in [docs/REFERENCE.md](docs/REFERENCE.md),
+and a working repository is at [node-q/hbench-action-example](https://github.com/node-q/hbench-action-example).
 For hbench itself, the docs are at [nodeq.tech/docs](https://nodeq.tech/docs):
 
 - [Agents](https://nodeq.tech/docs/reference/agents) and the [hbench command line](https://nodeq.tech/docs/reference/hbench-cli)
