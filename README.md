@@ -167,7 +167,93 @@ Each agent reads its key from the environment, so pass it in the step's `env` fr
 | `gemini-cli` | Google Gemini CLI | `google/gemini-3-pro` | `GEMINI_API_KEY` |
 | `deepseek-harness` | DeepSeek's harness ([dsh](https://github.com/deepseek-ai/deepseek-harness)) | `deepseek/deepseek-v4-flash` | `DEEPSEEK_API_KEY` |
 | `oracle` | Each task's reference solution, to check the tasks | | |
-| … and a lot more | [hbench's agent list](https://github.com/node-q/hbench#agents) | | |
+| … and 40 more | the lists below | | |
+
+The action runs the agents and providers of the hbench release it installs. With hbench 0.3.0, that is 46
+agents, and 51 providers for the agents that take any model. `hbench agents list` prints the agents of the
+release you have.
+
+<details><summary>All 46 agents</summary>
+
+`oracle` runs each task's reference solution and `nop` does nothing; both check tasks. The other 44 are coding
+agents:
+
+`acp`, `aider`, `antigravity-cli`, `antigravity-sdk`, `claude-code`, `cline-cli`, `code-puppy`, `codex`,
+`computer-1`, `copilot-cli`, `cortex-code`, `cursor-cli`, `deepseek-harness`, `deerflow`, `devin`, `dspy-rlm`,
+`eve`, `fx`, `fx-dev`, `gemini-cli`, `goose`, `grok-build`, `hermes`, `junie`, `kimi-cli`, `kimi-code`,
+`langgraph`, `mcode`, `mimo`, `mini-swe-agent`, `muse-code`, `nemo-agent`, `openclaw`, `opencode`,
+`openhands`, `openhands-sdk`, `pi`, `qwen-coder`, `rovodev-cli`, `strands`, `swe-agent`, `terminus-2`,
+`trae-agent`, `vibe`.
+
+`terminus` and `terminus-1` are other names for `terminus-2`, and `acp:<id>` runs any agent that speaks the
+Agent Client Protocol. Agents from a vendor, such as `claude-code`, `codex`, `gemini-cli` and
+`deepseek-harness`, sign in to that vendor with its own key.
+
+</details>
+
+<details><summary>All 51 providers</summary>
+
+Agents that take any model, such as `terminus-2`, `aider`, `opencode`, `goose`, `mini-swe-agent` and
+`swe-agent`, name it as `provider/model` and read the provider's key, any one of those listed:
+
+| Provider (`model` prefix) | Key |
+|---|---|
+| `ai21`, `ai21_chat` | `AI21_API_KEY` |
+| `aleph_alpha` | `ALEPH_ALPHA_API_KEY` |
+| `amazon-bedrock`, `sagemaker`, `bedrock` | `AWS_ACCESS_KEY_ID`, with `AWS_SECRET_ACCESS_KEY` and `AWS_REGION` (and `AWS_SESSION_TOKEN`) passed along |
+| `anthropic` | `ANTHROPIC_API_KEY` |
+| `azure` | `AZURE_API_KEY`, with `AZURE_API_VERSION` and `AZURE_RESOURCE_NAME` passed along |
+| `anyscale` | `ANYSCALE_API_KEY` |
+| `baseten` | `BASETEN_API_KEY` |
+| `cerebras` | `CEREBRAS_API_KEY` |
+| `cloudflare` | `CLOUDFLARE_API_KEY` |
+| `codestral` | `CODESTRAL_API_KEY` |
+| `cohere` | `COHERE_API_KEY` |
+| `dashscope` | `DASHSCOPE_API_KEY` |
+| `databricks` | `DATABRICKS_TOKEN` |
+| `datarobot` | `DATAROBOT_API_TOKEN` |
+| `deepseek` | `DEEPSEEK_API_KEY` |
+| `deepinfra` | `DEEPINFRA_API_KEY` |
+| `doubao` | `DOUBAO_API_KEY` |
+| `featherless_ai` | `FEATHERLESS_AI_API_KEY` |
+| `fireworks_ai` | `FIREWORKS_AI_API_KEY` |
+| `github-copilot` | `GITHUB_TOKEN` |
+| `google`, `gemini` | `GOOGLE_API_KEY`, `GEMINI_API_KEY`, `GOOGLE_GENERATIVE_AI_API_KEY` |
+| `groq` | `GROQ_API_KEY` |
+| `huggingface` | `HF_TOKEN`, `HUGGINGFACE_API_KEY` |
+| `infinity` | `INFINITY_API_KEY` |
+| `kimi` | `KIMI_API_KEY`, `MOONSHOT_API_KEY` |
+| `llama`, `llamaapi` | `LLAMA_API_KEY` |
+| `mistral` | `MISTRAL_API_KEY` |
+| `minimax` | `MINIMAX_API_KEY` |
+| `moonshot` | `MOONSHOT_API_KEY` |
+| `nebius` | `NEBIUS_API_KEY` |
+| `nlp_cloud` | `NLP_CLOUD_API_KEY` |
+| `nvidia` | `NVIDIA_API_KEY` |
+| `nvidia_nim` | `NVIDIA_NIM_API_KEY` |
+| `novita` | `NOVITA_API_KEY` |
+| `ollama` | `OLLAMA_API_KEY` |
+| `openai`, `openai-responses`, `litellm_proxy`, `openai_responses` | `OPENAI_API_KEY` |
+| `opencode` | `OPENCODE_API_KEY` |
+| `openrouter` | `OPENROUTER_API_KEY` |
+| `ovhcloud` | `OVHCLOUD_API_KEY` |
+| `palm` | `PALM_API_KEY` |
+| `perplexity` | `PERPLEXITYAI_API_KEY` |
+| `replicate` | `REPLICATE_API_KEY` |
+| `tetrate` | `TETRATE_API_KEY` |
+| `together`, `together_ai` | `TOGETHER_API_KEY`, `TOGETHERAI_API_KEY` |
+| `vercel_ai_gateway` | `VERCEL_AI_GATEWAY_API_KEY` |
+| `vertex_ai` | `VERTEXAI_PROJECT` |
+| `volcengine` | `VOLCENGINE_API_KEY` |
+| `voyage` | `VOYAGE_API_KEY` |
+| `writer` | `WRITER_API_KEY` |
+| `xai` | `XAI_API_KEY` |
+| `zai` | `ZAI_API_KEY` |
+
+An OpenAI-compatible server, such as ollama, vLLM or LM Studio, works as `openai/<model>` with
+`OPENAI_BASE_URL` set to its address.
+
+</details>
 
 ## License
 
