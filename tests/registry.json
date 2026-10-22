@@ -1,0 +1,13 @@
+[
+  {
+    "name": "hello",
+    "version": "1.0",
+    "description": "One task, for this action's tests.",
+    "tasks": [
+      {
+        "name": "hello-world",
+        "path": "tests/tasks/hello-world"
+      }
+    ]
+  }
+]

@@ -20,10 +20,10 @@ inputs:
     description: A task directory, or a directory of task directories (hbench run --path). Set path, dataset or config to run; with none of them the action only installs hbench.
     default: ''
   dataset:
-    description: Dataset to run, name@version (hbench run --dataset). Needs registry, or --registry-url in args.
+    description: Dataset to run, name@version (hbench run --dataset). Needs registry.
     default: ''
   registry:
-    description: OCI dataset registry, oci://<registry>/<namespace>, or OCI image layouts on disk, oci-layout:<dir> (hbench run --registry).
+    description: Where the dataset is listed. An OCI registry, oci://<registry>/<namespace>, or OCI image layouts on disk, oci-layout:<dir> (hbench run --registry); or a registry.json, by https:// URL (--registry-url) or path (--registry-path).
     default: ''
   config:
     description: Job config, YAML or JSON (hbench run --config). The other inputs override it.

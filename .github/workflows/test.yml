@@ -158,3 +158,32 @@ jobs:
         run: |
           [[ "$N_TRIALS" == 2 ]]
           grep -q '^"humaneval-plus@1.0" = "sha256:' "$RUNNER_TEMP/hbench.lock"
+
+  run-registry-json:
+    name: Run a dataset listed in a registry.json, by ${{ matrix.form }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        form: [path, url]
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Run hello@1.0
+        id: hbench
+        uses: ./
+        with:
+          dataset: hello@1.0
+          registry: ${{ matrix.form == 'path' && 'tests/registry.json' || format('https://raw.githubusercontent.com/{0}/{1}/tests/registry.json', github.repository, github.event.pull_request.head.sha || github.sha) }}
+          agent: oracle
+          min-mean-reward: '1'
+          upload-artifact: 'false'
+      - name: Check the outputs
+        env:
+          MEAN_REWARD: ${{ steps.hbench.outputs.mean-reward }}
+          N_TRIALS: ${{ steps.hbench.outputs.n-trials }}
+        run: |
+          [[ "$MEAN_REWARD" == 1.0 && "$N_TRIALS" == 1 ]]
