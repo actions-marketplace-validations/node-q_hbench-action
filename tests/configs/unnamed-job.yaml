@@ -1,0 +1,4 @@
+agents:
+  - name: oracle
+tasks:
+  - path: tests/tasks/hello-world

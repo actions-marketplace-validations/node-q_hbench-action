@@ -191,3 +191,44 @@ jobs:
           N_TRIALS: ${{ steps.hbench.outputs.n-trials }}
         run: |
           [[ "$MEAN_REWARD" == 1.0 && "$N_TRIALS" == 1 ]]
+
+  run-config:
+    name: Keep the job name a config sets, unless job-name replaces it
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Run a config that sets job_name
+        id: named
+        uses: ./
+        with:
+          config: tests/configs/named-job.json
+          min-mean-reward: '1'
+          upload-artifact: 'false'
+      - name: Run it again under the name job-name sets
+        id: renamed
+        uses: ./
+        with:
+          config: tests/configs/named-job.json
+          job-name: renamed-job
+          min-mean-reward: '1'
+          upload-artifact: 'false'
+      - name: Run a config that sets no job_name
+        id: unnamed
+        uses: ./
+        with:
+          config: tests/configs/unnamed-job.yaml
+          min-mean-reward: '1'
+          upload-artifact: 'false'
+      - name: Check the job directories and the names hbench recorded
+        env:
+          NAMED: ${{ steps.named.outputs.job-dir }}
+          RENAMED: ${{ steps.renamed.outputs.job-dir }}
+          UNNAMED: ${{ steps.unnamed.outputs.job-dir }}
+        run: |
+          [[ "$(basename "$NAMED")" == named-job && "$(jq -r .job_name "$NAMED/config.json")" == named-job ]]
+          [[ "$(basename "$RENAMED")" == renamed-job && "$(jq -r .job_name "$RENAMED/config.json")" == renamed-job ]]
+          [[ "$(basename "$UNNAMED")" == "$GITHUB_JOB"-* && -f "$UNNAMED/result.json" ]]

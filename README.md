@@ -73,7 +73,11 @@ To run Claude Code instead, add your Anthropic key as a repository secret and pa
           n-tasks: 5
 ```
 
-The scores go to the job summary, and the job's files are uploaded as an artifact.
+The scores go to the job summary, and the job's files are uploaded as an artifact. `n-tasks: 5` runs 5 of the
+dataset's 89 tasks; leave it out to run them all. A score compares only with runs of the same tasks: the same
+dataset and version from the same registry, with the same `n-tasks`, `include` and `exclude`. To run a job
+spec you were given, under the job name it sets, pass it as `config` alone (see
+[Run a job spec](docs/REFERENCE.md#more-examples)).
 
 For a whole repository to fork, with three tasks, the workflow that checks them on every pull request and
 workflows that run agents on them, see
@@ -100,7 +104,7 @@ For hbench itself, the docs are at [nodeq.tech/docs](https://nodeq.tech/docs):
     # registry: oci://ghcr.io/node-q/hbench-datasets
     # dataset: my-tasks@1.0                       # or a dataset listed in a registry.json
     # registry: registry.json                     #   a path, or an https:// URL
-    # config: job.yaml                            # or a job config (YAML/JSON)
+    # config: job.yaml                            # or a job config (YAML/JSON), run under its job_name
 
     # Who runs it
     agent: claude-code                            # default: oracle
