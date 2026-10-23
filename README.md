@@ -269,8 +269,8 @@ hbench-action is built and maintained by [node-q](https://nodeq.tech). See the
 [contributors graph](https://github.com/node-q/hbench-action/graphs/contributors) for everyone who has
 contributed.
 
-- Questions and help: [#support on Discord](https://discord.com/channels/1562896153710690495/1563027997995442176)
-- New releases: [#announcements on Discord](https://discord.com/channels/1562896153710690495/1563071156527833210)
+- Questions and help: [#support on Discord](https://discord.gg/5b6wCn5sEK)
+- New releases: [#announcements on Discord](https://discord.gg/dEvy6DCMTn)
 - Bugs and feature requests for the action: [GitHub issues](https://github.com/node-q/hbench-action/issues);
   for hbench itself, [node-q/hbench's issues](https://github.com/node-q/hbench/issues)
 - The full reference: [docs/REFERENCE.md](docs/REFERENCE.md)
