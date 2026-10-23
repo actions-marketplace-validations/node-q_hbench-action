@@ -1,0 +1,5 @@
+{
+  "job_name": "named-job",
+  "agents": [{"name": "oracle"}],
+  "tasks": [{"path": "tests/tasks/hello-world"}]
+}

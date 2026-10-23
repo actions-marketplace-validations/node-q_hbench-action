@@ -33,11 +33,22 @@ esac
 if [[ -n "${INPUT_MIN_MEAN_REWARD}" ]]; then
   [[ "$INPUT_MIN_MEAN_REWARD" =~ ^(0(\.[0-9]+)?|1(\.0+)?)$ ]] || fail "min-mean-reward is '$INPUT_MIN_MEAN_REWARD'; use a number from 0 to 1"
 fi
+while IFS= read -r line; do
+  case "${line#"${line%%[![:space:]]*}"}" in
+    --job-name | --job-name=*) fail "args sets --job-name; set the job-name input instead" ;;
+  esac
+done <<<"$INPUT_ARGS"
 
 jobs_directory="${INPUT_JOBS_DIR:-$RUNNER_TEMP/hbench-jobs}"
 mkdir -p "$jobs_directory"
 jobs_directory="$(cd "$jobs_directory" && pwd)"
-job_name="${GITHUB_JOB:-job}-$(date -u +%Y%m%dT%H%M%SZ)-$RANDOM"
+run_id="${GITHUB_JOB:-job}-$(date -u +%Y%m%dT%H%M%SZ)-$RANDOM"
+config_job_name=""
+if [[ -n "$INPUT_CONFIG" && -z "$INPUT_JOB_NAME" ]]; then
+  config_job_name="$(python3 "$GITHUB_ACTION_PATH/scripts/config_job_name.py" "$INPUT_CONFIG")" ||
+    fail "could not read config '$INPUT_CONFIG'"
+fi
+job_name="${INPUT_JOB_NAME:-${config_job_name:-$run_id}}"
 job_directory="$jobs_directory/$job_name"
 
 arguments=(run)
@@ -61,11 +72,12 @@ add_option --n-concurrent "$INPUT_N_CONCURRENT"
 add_lines --include-task-name "$INPUT_INCLUDE"
 add_lines --exclude-task-name "$INPUT_EXCLUDE"
 [[ "${INPUT_LOCKED:-false}" == true ]] && arguments+=(--locked)
-arguments+=(--jobs-dir "$jobs_directory" --job-name "$job_name")
+arguments+=(--jobs-dir "$jobs_directory")
+[[ -z "$config_job_name" ]] && arguments+=(--job-name "$job_name")
 add_lines "" "$INPUT_ARGS"
 
 echo "job-dir=$job_directory" >> "$GITHUB_OUTPUT"
-artifact_name="${INPUT_ARTIFACT_NAME:-hbench-$job_name}"
+artifact_name="${INPUT_ARTIFACT_NAME:-hbench-$run_id}"
 echo "artifact-name=$artifact_name" >> "$GITHUB_OUTPUT"
 
 printf 'hbench'
