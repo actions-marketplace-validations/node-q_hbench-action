@@ -13,13 +13,13 @@ The [README](../README.md) has the short version.
 
 | Input | Default | Description |
 |---|---|---|
-| `version` | `latest` | hbench release to install, such as v0.3.0, or latest. |
+| `version` | `latest` | hbench release to install, such as v0.3.5, or latest. |
 | `verify-provenance` | `auto` | Check the release archive's build provenance with gh attestation verify. true, false, or auto (when the GitHub CLI is installed). |
 | `token` | `${{ github.token }}` | GitHub token for gh attestation verify. |
 | `path` |  | A task directory, or a directory of task directories (hbench run --path). Set path, dataset or config to run; with none of them the action only installs hbench. |
-| `dataset` |  | Dataset to run, name@version (hbench run --dataset). Needs registry. |
-| `registry` |  | Where the dataset is listed. An OCI registry, oci://<registry>/<namespace>, or OCI image layouts on disk, oci-layout:<dir> (hbench run --registry); or a registry.json, by https:// URL (--registry-url) or path (--registry-path). |
-| `config` |  | Job config, YAML or JSON (hbench run --config). The other inputs override it. |
+| `dataset` |  | Dataset to run, name@version (hbench run --dataset), from registry. With no registry, hbench 0.3.3 and later read it from $HBENCH_REGISTRY, else oci://ghcr.io/node-q/hbench-datasets. |
+| `registry` |  | Where the dataset is listed. An OCI registry, oci://<registry>/<namespace>, or OCI image layouts on disk, oci-layout:<dir> (hbench run --registry); or a registry.json, by https:// URL (--registry-url) or path (--registry-path). Empty uses hbench's default registry. |
+| `config` |  | Job config, YAML or JSON (hbench run --config). The other inputs override it. Unless job-name is set, the job keeps the config's job_name. |
 | `agent` |  | Agent to run (hbench run --agent); hbench agents list shows them. Empty runs hbench's default, the oracle. |
 | `model` |  | Model, as provider/name (hbench run --model). |
 | `n-tasks` |  | Run at most this many tasks (hbench run --n-tasks). |
@@ -31,6 +31,7 @@ The [README](../README.md) has the short version.
 | `args` |  | More hbench run arguments, one per line, each line a whole argument. |
 | `working-directory` | `.` | Directory to run hbench in. Relative paths and hbench.lock are read from it. |
 | `jobs-dir` |  | Where hbench writes the job directory. Empty uses hbench-jobs under the runner's temporary directory. |
+| `job-name` |  | Name of the job directory (hbench run --job-name). Empty keeps the job_name the config sets, and otherwise uses <job id>-<time>-<random>. |
 | `min-mean-reward` |  | Fail the step when the mean reward over every trial is below this number, from 0 to 1. Empty never fails on the score. |
 | `upload-artifact` | `true` | Upload the job directory as a workflow artifact. |
 | `artifact-name` |  | Name of the artifact. Empty uses hbench-<job id>-<time>-<random>; set it to something stable in a matrix. |
@@ -40,7 +41,7 @@ The [README](../README.md) has the short version.
 
 | Output | Description |
 |---|---|
-| `version` | The hbench release installed, such as v0.3.0. |
+| `version` | The hbench release installed, such as v0.3.5. |
 | `hbench-path` | Path of the installed hbench binary. |
 | `job-dir` | The job directory hbench wrote. |
 | `result-path` | The job's result.json. |
@@ -137,15 +138,39 @@ Run a dataset listed in a `registry.json`, by path or by https:// URL. A task wi
     registry: registry.json   # or https://raw.githubusercontent.com/you/tasks/<commit>/registry.json
 ```
 
+Run a job spec as it was given to you, such as one a leaderboard issues for a run, under the job name it
+sets:
+
+```yaml
+- uses: actions/checkout@v7
+- uses: node-q/hbench-action@v1
+  env:
+    DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+  with:
+    config: spec.json
+```
+
+A config that sets `job_name` keeps it: the action passes no `--job-name`, and `job-dir` is
+`<jobs-dir>/<job_name>`. A config that sets none runs as `<job id>-<time>-<random>`, as `path` and `dataset`
+do, and `job-name` sets a name of your own. hbench-action v1.1.0 and earlier passed their own `--job-name`
+every time. hbench starts a job name only once in a jobs directory, so running the same spec twice in one job
+needs another `jobs-dir`. With a spec, set only `config` and inputs that leave the job as it is, such as
+`version`, `jobs-dir`, `min-mean-reward` and the artifact inputs: a server that checks the job against its
+spec refuses one that differs. `--job-name` in `args` is refused; set `job-name` instead.
+
 Install only, then call hbench yourself:
 
 ```yaml
 - uses: node-q/hbench-action@v1
   id: hbench
   with:
-    version: v0.3.0
+    version: v0.3.5
 - run: hbench tasks check --path tasks
 ```
+
+`hbench tasks check` validates each task's files and test scripts and needs no key. `hbench check` is another
+command: it reviews tasks against a rubric with an agent, `claude-code` by default, so it needs that agent's
+key.
 
 Pass any other `hbench run` flag through `args`, one argument per line:
 
@@ -182,16 +207,19 @@ Pass any other `hbench run` flag through `args`, one argument per line:
 action.yml          the inputs, outputs and three steps: install, run, upload
 scripts/install.sh  download, checksum, provenance, tool cache
 scripts/run.sh      build the hbench run command line, run it, report
+scripts/config_job_name.py  the job_name a config sets, which run.sh keeps
 scripts/report.py   the job's results to outputs, job summary and the threshold
 tests/test_report.py  the report, on the two job directories in tests/report/
+tests/test_config_job_name.py  reading job_name from JSON and YAML configs
 tests/tasks/        a one-task folder the tests run
+tests/configs/      job configs with and without job_name
 ```
 
-`.github/workflows/test.yml` runs on GitHub-hosted runners only: actionlint, shellcheck and the report's unit
+`.github/workflows/test.yml` runs on GitHub-hosted runners only: actionlint, shellcheck and the scripts' unit
 tests; installing `latest` and a pinned release on Linux x86_64 and arm64 and macOS arm64 and x86_64, with
 provenance checked; the oracle on the local task with `min-mean-reward: '1'`; the `nop` agent, which must fail
-the step on its score; two tasks of an OCI dataset with `--lock-write`; and a dataset listed in a
-`registry.json`, by path and by URL.
+the step on its score; two tasks of an OCI dataset with `--lock-write`; a dataset listed in a
+`registry.json`, by path and by URL; and job configs with and without `job_name`, with and without `job-name`.
 
 To try the scripts outside GitHub, set the variables the runner sets (`RUNNER_TEMP`, `GITHUB_ACTION_PATH`,
 `GITHUB_OUTPUT`, `GITHUB_PATH`, `GITHUB_STEP_SUMMARY`) and the `INPUT_*` ones `action.yml` passes, then run
